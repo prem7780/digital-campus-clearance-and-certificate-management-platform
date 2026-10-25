@@ -1,0 +1,28 @@
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+
+# Maven build output
+target/
+
+# Generated application files
+private-generated-forms/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Java tooling
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+logs/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+

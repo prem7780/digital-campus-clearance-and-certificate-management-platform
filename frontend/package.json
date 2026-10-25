@@ -1,0 +1,6 @@
+{
+  "name":"dccmp-frontend","private":true,"version":"1.0.0","type":"module",
+  "scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0","check":"node scripts/verify-frontend.mjs"},
+  "dependencies":{"react":"^19.1.0","react-dom":"^19.1.0","react-router-dom":"^6.30.1","lucide-react":"^0.468.0"},
+  "devDependencies":{"@vitejs/plugin-react":"^4.7.0","vite":"^6.2.0","tailwindcss":"^4.1.0","@tailwindcss/vite":"^4.1.0"}
+}

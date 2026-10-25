@@ -1,0 +1,79 @@
+# ============================================================
+# DCCMP root .gitignore
+# Spring Boot (Java / Maven) + React (Vite) + IntelliJ IDEA
+# ============================================================
+
+# Secrets and machine-specific environment settings
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+**/application-secret.yml
+**/application-secret.yaml
+**/application-secret.properties
+
+# Maven / Java build output
+**/target/
+**/build/
+**/out/
+*.class
+*.iml
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# Node.js / React / Vite
+**/node_modules/
+**/dist/
+**/.vite/
+**/.cache/
+**/coverage/
+**/.nyc_output/
+**/.eslintcache
+*.tsbuildinfo
+
+# IDE and editor configuration
+**/.idea/
+**/.vscode/
+**/.settings/
+**/.classpath
+**/.project
+
+# Logs and temporary files
+*.log
+*.log.*
+logs/
+**/logs/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Test run artifacts (Selenium / Playwright)
+**/test-results/
+**/playwright-report/
+**/allure-results/
+**/allure-report/
+**/screenshots/
+
+# Runtime-generated or private uploads/exports
+**/private-generated-forms/
+**/generated-reports/
+**/uploads/
+
+# Local database copies (do not ignore versioned Flyway SQL migrations)
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.sql.zip

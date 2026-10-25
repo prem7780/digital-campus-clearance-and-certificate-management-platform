@@ -1,0 +1,18 @@
+INSERT INTO departments(code,name,active) VALUES
+('hod_eee','EEE HOD',true),
+('hod_civil','Civil HOD',true),
+('hod_ece','ECE HOD',true),
+('hod_cse','CSE HOD',true),
+('hod_mech','Mechanical HOD',true),
+('hod_ai','AI HOD',true),
+('hod_it','IT HOD',true),
+('hostel','Hostel',true),
+('canteen','Canteen',true),
+('accounts','Accounts',true),
+('scholarship','Scholarship',true),
+('training_placements','Training & Placements',true),
+('examinations','Examination Section',true),
+('sports','Games & Sports',true),
+('alumni','Alumni',true),
+('library','Library',true),
+('special_team','Special Team',true);

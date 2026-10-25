@@ -1,0 +1,91 @@
+
+# ==========================================
+# DCCMP - SPRING BOOT CONFIGURATION
+# ==========================================
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+spring:
+
+  # ----------------------------------------
+  # LOAD ENVIRONMENT VARIABLES FROM .env
+  # ----------------------------------------
+  config:
+    import: "optional:file:./.env[.properties]"
+
+  # ----------------------------------------
+  # MYSQL DATABASE CONFIGURATION
+  # ----------------------------------------
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/dccmp_db?createDatabaseIfNotExist=true}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
+
+  # ----------------------------------------
+  # JPA / HIBERNATE
+  # ----------------------------------------
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  # ----------------------------------------
+  # FLYWAY DATABASE MIGRATIONS
+  # ----------------------------------------
+  flyway:
+    enabled: true
+
+  # ----------------------------------------
+  # GMAIL SMTP CONFIGURATION
+  # ----------------------------------------
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+  # ----------------------------------------
+  # JSON DATE FORMATTING
+  # ----------------------------------------
+
+# ==========================================
+# DCCMP CUSTOM APPLICATION PROPERTIES
+# ==========================================
+
+app:
+
+  # Frontend URL
+  base-url: ${APP_BASE_URL:http://localhost:5173}
+
+  # Email sender
+  mail-from: ${MAIL_FROM:}
+
+  # PDF template and output directory
+  pdf-template: ${PDF_TEMPLATE:../reference-forms/No_Dues(2).pdf}
+  pdf-storage: ${PDF_STORAGE:./private-generated-forms}
+
+  # OTP expiry in minutes
+  otp-expiry-minutes: 10
+
+  # Student roll number validation
+  student-roll-regex: ${ROLL_REGEX:^[0-9][0-9]NG[15]A[0-9][0-9][0-9][0-9]$}
+
+  # Initial administrator credentials
+  admin-code: ${ADMIN_CODE:}
+  admin-password: ${ADMIN_PASSWORD:}

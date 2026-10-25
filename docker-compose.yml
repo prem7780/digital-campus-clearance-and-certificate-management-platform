@@ -1,0 +1,19 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: dccmp_db
+      MYSQL_USER: dccmp
+      MYSQL_PASSWORD: dccmp_local_only
+      MYSQL_ROOT_PASSWORD: root_local_only
+    ports: ["3306:3306"]
+    volumes: ["dccmp_db:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      retries: 25
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["1025:1025", "8025:8025"]
+volumes:
+  dccmp_db:

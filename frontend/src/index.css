@@ -1,0 +1,397 @@
+@import "tailwindcss";
+
+/*
+ * DCCMP — Campus Classic | Design Proposal 1
+ * Step 1: shared styles (frontend/src/index.css)
+ * White-first, grey surfaces, restrained muted blue for important actions.
+ * Frontend-only styling: existing routes, APIs, auth and workflows are unchanged.
+ * Works with current App.jsx, Student.jsx, Staff.jsx, Principal.jsx and Admin.jsx.
+ */
+:root {
+  font-family: "Segoe UI", Arial, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --canvas: #f8f9fa;
+  --surface: #ffffff;
+  --surface-soft: #f6f7f8;
+  --surface-hover: #f1f3f5;
+  --ink: #293746;
+  --ink-strong: #263645;
+  --muted: #75828e;
+  --line: #e1e6ea;
+  --line-strong: #d5dde4;
+  --accent: #344e67;
+  --accent-strong: #344e67;
+  --accent-soft: #edf2f6;
+  --shadow: 0 1px 2px rgba(28, 42, 57, 0.018);
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--canvas); }
+#root { min-height: 100vh; }
+::selection { color: var(--ink-strong); background: #dbe5ee; }
+
+/* Clear, consistent interactive affordances. */
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .52; }
+a { text-underline-offset: 3px; }
+:where(a, button, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid #60798f;
+  outline-offset: 3px;
+}
+
+/* Forms */
+.field {
+  width: 100%; min-width: 0; min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px; padding: 11px 13px;
+  background: var(--surface); color: var(--ink-strong);
+  font-size: 14px; line-height: 1.45;
+  box-shadow: 0 1px 1px rgba(16,24,40,.012);
+  outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.field::placeholder { color: #97a2ad; opacity: 1; }
+.field:hover:not(:disabled) { border-color: #b9c4ce; }
+.field:focus { border-color: #869bae; box-shadow: 0 0 0 2px rgba(82,108,130,.095); }
+.field:disabled { background: var(--surface-soft); color: var(--muted); }
+textarea.field { min-height: 94px; resize: vertical; }
+input[type="date"].field, select.field { color-scheme: light; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+.label {
+  display: block; margin-bottom: 7px;
+  color: #5f6e7a; font-size: 12px; font-weight: 600;
+  line-height: 1.5; letter-spacing: 0; text-transform: none;
+}
+
+/* Buttons: emphasize the main action, let secondary actions recede. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 10px 15px;
+  border: 1px solid transparent; border-radius: 5px;
+  font-size: 13px; font-weight: 600; line-height: 1.35;
+  text-align: center; text-decoration: none; white-space: normal;
+  transition: background-color .16s ease, border-color .16s ease,
+    box-shadow .16s ease;
+}
+/* No motion on action buttons; interactions stay predictable. */
+.btn-primary, .btn-dark {
+  background: var(--accent-strong); border-color: var(--accent-strong); color: #fff;
+}
+.btn-primary:hover:not(:disabled), .btn-dark:hover:not(:disabled) {
+  background: #2b4258; border-color: #2b4258;
+}
+.btn-muted {
+  background: #f4f6f8; border-color: #e7ebef; color: #45566a;
+}
+.btn-muted:hover:not(:disabled) { background: #e9eef2; border-color: #d7dfe6; }
+.btn-danger {
+  background: #fff8f7; border-color: #f2d9d7; color: #a14e4b;
+}
+.btn-danger:hover:not(:disabled) { background: #fbeceb; }
+
+/* Existing inline Tailwind button classes: tone down saturated actions
+   without removing their semantic intention or click handlers. */
+button.bg-emerald-600, .btn.bg-emerald-600 { background-color: #3e7165 !important; color: white !important; }
+button.bg-emerald-600:hover:not(:disabled) { background-color: #315f56 !important; }
+button.bg-blue-600, .btn.bg-blue-600 { background-color: var(--accent-strong) !important; color: white !important; }
+
+/* Surface hierarchy: fine borders, generous whitespace, almost no shadow. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+.section-title {
+  font-size: clamp(20px, 2vw, 25px); line-height: 1.3;
+  font-weight: 700; letter-spacing: -.022em; color: var(--ink-strong);
+}
+.metric {
+  color: var(--ink-strong); font-size: clamp(27px, 3vw, 33px);
+  font-weight: 700; line-height: 1.18; letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+.tiny { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.input-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 18px; }
+.app-scroll { max-height: 360px; overflow: auto; }
+
+/* Pills: understated, but preserve meaningful status differences. */
+.pill {
+  display: inline-block; padding: 4px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0;
+  line-height: 1.3; white-space: nowrap;
+}
+.status-APPROVED, .status-EMAIL_SENT, .status-HANDED_OVER {
+  color: #2f6f58; background: #ecf5ef; border: 1px solid #dbece1;
+}
+.status-REJECTED, .status-ACTION_REQUIRED,
+.status-PRINCIPAL_ACTION_REQUIRED, .status-EMAIL_FAILED {
+  color: #a55250; background: #fcf1ef; border: 1px solid #f2e1df;
+}
+.status-PENDING, .status-PENDING_DEPARTMENTS,
+.status-PENDING_PRINCIPAL, .status-NOT_COLLECTED {
+  color: #92723e; background: #faf2e5; border: 1px solid #f1e6d2;
+}
+
+/* Readable dense tables; keep all original columns accessible. */
+.table-wrap { width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: #f7f8fa; color: #738092;
+  font-size: 11px; font-weight: 700; text-align: left;
+  letter-spacing: .055em; text-transform: uppercase;
+}
+th, td { padding: 13px 15px; border-bottom: 1px solid #edf0f3; vertical-align: middle; }
+td { color: #354457; line-height: 1.5; }
+tbody tr:hover { background: #fbfcfd; }
+tr:last-child td { border-bottom: 0; }
+
+/* Shell and navigation: switch the original navy block to quiet white. */
+.staff-shell { background: var(--canvas) !important; }
+.staff-sidebar {
+  width: 226px; flex: 0 0 226px;
+  min-height: calc(100vh - 75px);
+  padding: 20px 12px !important;
+  background: #fff !important;
+  color: var(--ink) !important;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
+}
+.staff-sidebar :is(h2,h3,p,span) { color: inherit; }
+.staff-sidebar .text-white { color: var(--ink-strong) !important; }
+.staff-sidebar .text-blue-200, .staff-sidebar [class*="text-blue-200"] { color: #8390a0 !important; }
+.staff-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; margin: 3px 0; padding: 11px 12px;
+  border: 1px solid transparent; border-radius: 5px;
+  background: transparent; color: #5c6a7b;
+  text-align: left; font-size: 13px; font-weight: 600;
+  transition: background-color .15s ease, color .15s ease;
+}
+.staff-nav-item svg { flex-shrink: 0; color: #8190a0; stroke-width: 1.8; }
+.staff-nav-item:hover { background: #f3f5f7; color: var(--ink-strong); }
+.staff-nav-active, .staff-nav-active:hover {
+  background: #edf2f6 !important; color: #344e67 !important;
+  border-color: #e7ebef !important;
+}
+.staff-nav-active svg { color: #3c5d74 !important; }
+.staff-sidebar > div:first-child { border-bottom: 1px solid #edf0f3; padding-bottom: 20px; }
+.staff-sidebar > nav + div { color: #8b96a3 !important; }
+.staff-sidebar button[aria-label="Close navigation"] { color: var(--ink) !important; }
+
+/* Top bar and cross-portal brand */
+#root > header, #root > div > header,
+header:has(a[href="/"]) {
+  background: #fff !important; border-bottom: 1px solid var(--line) !important;
+}
+header:has(a[href="/"]) { min-height: 76px; }
+header:has(a[href="/"]) a[href="/"] > span:first-child {
+  background: #edf2f6 !important; color: #385770 !important;
+  border: 1px solid #e0e7ed; border-radius: 5px;
+}
+header:has(a[href="/"]) a[href="/"] .text-slate-900 { color: var(--ink-strong) !important; }
+
+/* Existing utility-driven panels and chart containers */
+.staff-shell main, .staff-shell > main { min-width: 0; }
+.staff-shell main > header { padding-bottom: 4px; }
+.staff-shell .bg-slate-50, main .bg-slate-50 { background-color: #f7f9fa !important; }
+.staff-shell .hover\:bg-blue-50:hover { background-color: #f0f4f7 !important; }
+.staff-shell .border-blue-200 { border-color: #cddbe5 !important; }
+.staff-shell .ring-blue-500 { --tw-ring-color: #869ba9 !important; }
+.staff-shell .text-blue-600, .staff-shell .text-blue-700 { color: #426176 !important; }
+.staff-shell .text-emerald-500 { color: #6b9381 !important; }
+.staff-shell .bg-emerald-500 { background-color: #6f9786 !important; }
+.staff-shell .bg-rose-400 { background-color: #c9928e !important; }
+
+/* Principal uses the same classes but does not wrap in .staff-shell. */
+aside.staff-sidebar ~ main { min-width: 0; }
+main .text-blue-600, main .text-blue-700 { color: #45657b; }
+main .bg-blue-50 { background-color: #f0f4f7 !important; }
+main .border-blue-100 { border-color: #dce6ec !important; }
+main .border-blue-300 { border-color: #aec4d4 !important; }
+main .bg-emerald-500 { background-color: #719785 !important; }
+main .bg-rose-400 { background-color: #c79291 !important; }
+
+/* Standard notifications, modals, and overlays */
+.toast {
+  position: fixed; z-index: 80; right: 22px; bottom: 22px;
+  max-width: min(420px, calc(100vw - 40px));
+  padding: 13px 18px; border: 1px solid #e1e8ed;
+  border-radius: 6px; background: #303f4e; color: #fff;
+  box-shadow: 0 12px 35px rgba(30,45,60,.14);
+}
+[role="dialog"] > div, [aria-modal="true"] > div {
+  border: 1px solid #e7eaee;
+}
+[role="alert"] { line-height: 1.55; }
+
+/* Landing hero: replace deep navy and saturated blue with airy neutrals.
+   Other React components remain untouched by this CSS-only change. */
+#root main > section:first-child[class*="bg-"] {
+  background: #fff !important;
+  color: var(--ink-strong) !important;
+  border-bottom: 1px solid var(--line);
+}
+#root main > section:first-child[class*="bg-"] h1,
+#root main > section:first-child[class*="bg-"] h2,
+#root main > section:first-child[class*="bg-"] h3,
+#root main > section:first-child[class*="bg-"] .text-white {
+  color: var(--ink-strong) !important;
+}
+#root main > section:first-child[class*="bg-"] .text-blue-300 {
+  color: #70899d !important;
+}
+#root main > section:first-child[class*="bg-"] [class*="text-blue-100"],
+#root main > section:first-child[class*="bg-"] .text-blue-200 {
+  color: #728092 !important;
+}
+#root main > section:first-child[class*="bg-"] [class*="bg-white/10"] {
+  background: #f5f7f9 !important;
+  border-color: #e2e7ec !important;
+  color: #3e5063 !important;
+  backdrop-filter: none !important;
+}
+#root main > section:first-child[class*="bg-"] [class*="bg-white/10"].btn {
+  border: 1px solid #dde5ec !important;
+}
+#root main > section:first-child[class*="bg-"] .bg-white {
+  background: #edf2f6 !important; color: #344e67 !important;
+}
+#root main > section:first-child[class*="bg-"] [class*="bg-white/20"] { background-color: #dbe3ea !important; }
+#root main > section:first-child[class*="bg-"] [class*="bg-emerald-500/20"] {
+  background: #eaf3ed !important; color: #49735c !important;
+}
+
+/* Employee/student logins should feel part of the same product. */
+#root [class*="from-slate-50"][class*="to-blue-100"] {
+  background: #f8f9fb !important;
+}
+#root [class*="bg-blue-50"].inline-block { background: #edf2f6 !important; color: #456176 !important; }
+#root .text-blue-700 { color: #426277; }
+#root .text-blue-900 { color: #2d4256; }
+
+/* Spacing and responsive refinements without removing functionality */
+@media (min-width: 1024px) {
+  .staff-shell > main { padding: 35px 36px 52px; }
+  .staff-shell main > header { margin-bottom: 30px; }
+}
+@media (max-width: 767px) {
+  .staff-sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    z-index: 50; width: min(300px, 86vw); min-height: 100vh;
+    transform: translateX(-110%);
+    transition: transform .2s ease;
+    box-shadow: 8px 0 40px rgba(25,40,60,.08);
+  }
+  .staff-sidebar-open { transform: translateX(0); }
+  .staff-shell > main { padding: 20px 16px 38px; }
+  .staff-shell > main > header { align-items: flex-start; }
+  th,td { padding: 12px; white-space: nowrap; }
+  .card { border-radius: 6px; }
+  .btn { min-height: 40px; }
+}
+@media (max-width: 420px) {
+  .staff-shell .grid-cols-2 > .card { padding: 14px; }
+  .metric { font-size: 27px; }
+  .section-title { font-size: 21px; }
+  .staff-shell > main { padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Campus Classic finishing details: neutrals lead, blue stays purposeful.
+   Keep content structure and all UI events managed by React. */
+.staff-shell, .staff-shell > main, #root { color: var(--ink); }
+.staff-sidebar .staff-nav-active { position: relative; }
+.staff-sidebar .staff-nav-active::before {
+  content: ""; position: absolute; left: 0; top: 7px; bottom: 7px;
+  width: 3px; border-radius: 2px; background: var(--accent);
+}
+.card, .panel { box-shadow: var(--shadow); }
+input, select, textarea { color-scheme: light; }
+button, a { -webkit-tap-highlight-color: transparent; }
+/* Keep links visibly distinguishable without filling backgrounds blue. */
+a:not([class]) { color: #3e6280; }
+a:not([class]):hover { color: #2b4861; }
+/* Neutral chart/table backgrounds; statuses retain their own soft tones. */
+.staff-shell .bg-blue-50, main .bg-blue-50 { background-color: #f2f5f7 !important; }
+.staff-shell .bg-blue-100, main .bg-blue-100 { background-color: #edf2f6 !important; }
+@media (max-width: 767px) {
+  .staff-sidebar { width: min(290px, 86vw); }
+  .staff-nav-item { min-height: 42px; }
+}
+
+/* Campus Classic — final shared header and portal presentation.
+   Blue is intentionally limited to links, the primary action and active nav. */
+.campus-public-page { background: var(--canvas); color: var(--ink); }
+.campus-topbar { border-bottom: 1px solid var(--line); background: #fff; }
+.campus-topbar-inner { min-height: 72px; }
+.campus-brand { display: inline-flex; min-width: 0; align-items: center; gap: 11px; }
+.campus-brand-mark {
+  display: grid; width: 36px; height: 36px; flex: none; place-items: center;
+  border: 1px solid #cbd6df; border-radius: 4px;
+  background: #eff3f7; color: #344e67; font-size: 12px; font-weight: 800;
+}
+.campus-brand-name {
+  display: block; color: #2b4156; font-size: 13px; font-weight: 700;
+  line-height: 1.3; white-space: normal;
+}
+.campus-brand-subtitle { display: block; margin-top: 3px; color: #86929e; font-size: 10px; }
+.campus-top-link {
+  display: inline-flex; min-height: 38px; align-items: center; justify-content: center;
+  padding: 8px 11px; border: 1px solid transparent; border-radius: 4px;
+  color: #647281; text-decoration: none; font-size: 12px; font-weight: 600;
+}
+.campus-top-link:hover { background: #f5f6f7; color: #374859; }
+.campus-top-link.campus-top-active { background: #edf2f6; color: #344e67; }
+.campus-hero { background: #fff; }
+.campus-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .085em; text-transform: uppercase; color: #758392; }
+.campus-hero-title { font-size: clamp(28px,4.1vw,43px); line-height: 1.24; letter-spacing: -.035em; font-weight: 700; }
+.campus-workflow { background: #fdfefe; }
+.campus-stage-number {
+  display: grid; width: 30px; height: 30px; flex: none; place-items: center;
+  border: 1px solid #e3e8ed; border-radius: 4px; background: #f7f9fa;
+  font-size: 11px; font-weight: 700; color: #687b8b;
+}
+.campus-service-card { color: inherit; border-radius: 5px; transition: border-color .15s ease, background-color .15s ease; }
+.campus-service-card:hover { border-color: #bccbd7; background: #fbfcfd; }
+.campus-accountbar { border-color: var(--line); }
+.campus-accountbar .btn { border-radius: 4px; }
+
+/* Smooth, regular academic UI rather than exaggerated template cards. */
+#root .card { border-radius: 5px; box-shadow: 0 1px 2px rgba(28,42,57,.025); }
+#root .rounded-2xl:not(.pill):not([class*="rounded-full"]) { border-radius: 8px; }
+#root .rounded-xl:not(.pill):not([class*="rounded-full"]) { border-radius: 6px; }
+#root .shadow-xl, #root .shadow-2xl { box-shadow: 0 12px 35px rgba(28,42,57,.12); }
+#root .staff-sidebar { border-radius: 0; }
+#root .staff-sidebar .staff-nav-active { font-weight: 700; }
+#root .bg-\[\#fafbfc\], #root .bg-\[\#f8f9fb\] { background-color: var(--canvas); }
+#root .text-blue-600, #root .text-blue-700, #root .text-blue-800 { color: #44637b; }
+#root .bg-blue-600, #root .bg-blue-700 { background-color: var(--accent); }
+#root .border-blue-500 { border-color: #6b8398; }
+#root .from-blue-600, #root .to-blue-600 { --tw-gradient-from: #344e67; --tw-gradient-to: #344e67; }
+/* Still preserve the actual approval/rejection state colors. */
+#root .bg-emerald-50 { background-color: #edf5f0; }
+#root .bg-rose-50 { background-color: #faf0ef; }
+#root .text-emerald-700 { color: #47735a; }
+#root .text-rose-700 { color: #995959; }
+#root th { background-color: #f7f8f9; }
+#root tbody tr:hover { background: #fafbfc; }
+@media (max-width: 767px) {
+  .campus-topbar-inner { min-height: 64px; }
+  .campus-brand-name { font-size: 11px; }
+  .campus-brand-subtitle { font-size: 9px; }
+  .campus-brand-mark { width: 32px; height: 32px; }
+  .campus-top-link { min-height: 36px; font-size: 11px; }
+  .campus-hero-title { font-size: clamp(26px,6vw,35px); }
+}
