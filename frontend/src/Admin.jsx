@@ -18,7 +18,9 @@ const NAV = [
   { id: 'applications', label: 'Applications', icon: ClipboardCheck },
   { id: 'staff', label: 'Employee Accounts', icon: Users },
   { id: 'departments', label: 'Departments', icon: Building2 },
-  { id: 'details', label: 'Application Details', icon: FileCheck2 },
+  { id: 'handover', label: 'Certificate Handover', icon: FileCheck2 },
+  { id: 'audit', label: 'Audit History', icon: History },
+  { id: 'reports', label: 'Reports', icon: BarChart3 },
 ]
 const FRESH_ACCOUNT = { code: '', name: '', password: '', role: 'ADMIN', departmentId: null, active: true }
 const csvType = 'text/csv;charset=utf-8'
@@ -129,6 +131,10 @@ export default function Admin() {
   const [verifyId, setVerifyId] = useState('')
   const [dialog, setDialog] = useState(null)
   const [dialogValue, setDialogValue] = useState('')
+  const [page, setPage] = useState(1)
+  const [auditQuery, setAuditQuery] = useState('')
+  const [auditSelectedId, setAuditSelectedId] = useState(null)
+  const [handoverFilter, setHandoverFilter] = useState('pending')
 
   const selected = useMemo(() => apps.find((item) => item.id === selectedId) || null, [apps, selectedId])
   const departmentById = useMemo(() => new Map(departments.map((d) => [d.id, d.name])), [departments])
@@ -138,6 +144,15 @@ export default function Admin() {
       .some((value) => String(value || '').toLowerCase().includes(query))
     return textMatch && (!statusFilter || item.status === statusFilter)
   }), [apps, filter, statusFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredApps.length / 10))
+  const currentPage = Math.min(page, totalPages)
+  const visibleApps = filteredApps.slice((currentPage - 1) * 10, currentPage * 10)
+  const auditApps = apps.filter((item) => [item.rollNumber, item.studentName, String(item.id)]
+    .some((value) => String(value || '').toLowerCase().includes(auditQuery.trim().toLowerCase())))
+  const handoverApps = apps.filter((item) => item.status === 'APPROVED' &&
+    (handoverFilter === 'all' || (handoverFilter === 'complete' ? item.handoverStatus === 'HANDED_OVER' : item.handoverStatus !== 'HANDED_OVER')))
+  useEffect(() => { setPage(1) }, [filter, statusFilter])
 
   const refresh = useCallback(async (showSpinner = true) => {
     if (showSpinner) setRefreshing(true)
@@ -189,15 +204,23 @@ export default function Admin() {
     if (ok) { setDialog(null); setDialogValue('') }
   }
   const downloadReport = async (format) => {
-    await act(async () => {
+    if (busy) return
+    setBusy(true); setError(''); setNotice('')
+    try {
       const data = await api(`/admin/reports?format=${format}`)
       const blob = data instanceof Blob ? data : new Blob([data], { type: exportTypes[format] })
+      if (!blob.size) throw new Error('The server returned an empty report.')
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url; link.download = `DCCMP-Department-Analytics.${format}`
-      document.body.appendChild(link); link.click(); link.remove()
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-    }, `${format.toUpperCase()} report downloaded.`)
+      link.href = url
+      link.download = `DCCMP-Department-Analytics.${format}`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 10000)
+      setNotice(`${format.toUpperCase()} download started.`)
+    } catch (e) { setError(e.message || 'Unable to download the report.') }
+    finally { setBusy(false) }
   }
   const submitReopening = async (approvalId, principalTarget) => {
     if (!selected || !reason.trim()) return
@@ -219,7 +242,8 @@ export default function Admin() {
     ['Departments', dashboard.departments ?? departments.length, Building2],
     ['Accounts', people.length, Users],
   ]
-  const currentNav = NAV.find((n) => n.id === tab)
+  const currentNav = NAV.find((n) => n.id === tab) || { label: 'Application Details' }
+  const navigation = selected ? [...NAV, { id: 'details', label: 'Application Details', icon: FileCheck2 }] : NAV
 
   return <main className="mx-auto w-full max-w-[1600px] px-4 py-7 sm:px-6 lg:px-9 lg:py-9">
     <div className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-6">
@@ -253,7 +277,7 @@ export default function Admin() {
           <p className="mt-1 text-sm font-semibold text-slate-800">Administration</p>
         </div>
         <nav className="mt-3 space-y-1" aria-label="Admin pages">
-          {NAV.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => go(id)}
+          {navigation.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => go(id)}
             aria-current={tab === id ? 'page' : undefined}
             className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left text-[13px] font-semibold transition-colors ${tab === id ? 'border border-slate-200 bg-slate-100 text-slate-900' : 'border border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
             <Icon size={17} strokeWidth={1.8} /><span className="flex-1">{label}</span>{tab === id && <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />}
@@ -267,14 +291,11 @@ export default function Admin() {
           {tab === 'overview' && <>
             <SectionTitle eyebrow="At a glance" title="College clearance overview" description="Current application statuses and certificate collection across the college." />
             <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">{overviewStats.map(([label, value, Icon]) => <Metric key={label} label={label} value={value} icon={Icon} />)}</div>
-            <Panel title="Aggregate analytics reports" description="Only Admin and Principal may download these college-wide reports. Student records are excluded."
-              action={<span className="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-600">Admin only</span>}>
-              <div className="grid gap-3 sm:grid-cols-3">{[['pdf', 'PDF report'], ['xlsx', 'Excel workbook'], ['csv', 'CSV data']].map(([format, title]) =>
-                <button key={format} type="button" className="flex min-w-0 items-center gap-3 rounded-md border border-slate-200 bg-white p-4 text-left transition-colors hover:bg-slate-50 disabled:opacity-50" disabled={busy} onClick={() => downloadReport(format)}>
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-600"><FileDown size={19} /></span>
-                  <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold text-slate-800">{title}</span><span className="tiny">Download .{format}</span></span>
-                  <Download size={16} className="shrink-0 text-slate-400" />
-                </button>)}
+            <Panel title="Administration shortcuts" description="Go directly to reporting, handover verification or individual audit records.">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn btn-muted" onClick={() => go('reports')}><BarChart3 size={16} /> Reports</button>
+                <button type="button" className="btn btn-muted" onClick={() => go('handover')}><FileCheck2 size={16} /> Certificate handover</button>
+                <button type="button" className="btn btn-muted" onClick={() => go('audit')}><History size={16} /> Audit history</button>
               </div>
             </Panel>
             <Panel title="Recent applications" description="Latest student submissions and their current clearance status."
@@ -299,8 +320,15 @@ export default function Admin() {
               </div>
               <div className="mb-3 text-xs text-slate-500">{number(filteredApps.length)} of {number(apps.length)} applications</div>
               {filteredApps.length ? <div className="table-wrap"><table><thead><tr><th>Application</th><th>Student</th><th>Roll number</th><th>Clearance</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>{filteredApps.map((item) => <tr key={item.id}><td className="font-semibold">#{item.id}</td><td className="font-semibold text-slate-900">{item.studentName}</td><td>{item.rollNumber}</td><td>{rows(item.approvals).filter((x) => x.status === 'APPROVED').length}/17</td><td><Status value={item.status} /></td><td><button type="button" className="btn btn-muted !min-h-9 !py-1.5" onClick={() => inspect(item)}>Open <ArrowRight size={14} /></button></td></tr>)}</tbody>
-              </table></div> : <div><Empty message={apps.length ? 'No applications match your filters.' : 'No applications available.'} />{(filter || statusFilter) && <div className="text-center"><button className="btn btn-muted" onClick={() => { setFilter(''); setStatusFilter('') }}>Clear filters</button></div>}</div>}
+                <tbody>{visibleApps.map((item) => <tr key={item.id}><td className="font-semibold">#{item.id}</td><td className="font-semibold text-slate-900">{item.studentName}</td><td>{item.rollNumber}</td><td>{rows(item.approvals).filter((x) => x.status === 'APPROVED').length}/17</td><td><Status value={item.status} /></td><td><button type="button" className="btn btn-muted !min-h-9 !py-1.5" onClick={() => inspect(item)}>Open <ArrowRight size={14} /></button></td></tr>)}</tbody>
+              </table></div> : <div><Empty message={apps.length ? 'No applications match your filters.' : 'No applications available.'} />{(filter || statusFilter) && <div className="text-center"><button type="button" className="btn btn-muted" onClick={() => { setFilter(''); setStatusFilter('') }}>Clear filters</button></div>}</div>}
+              {filteredApps.length > 10 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                <p className="tiny">Page {currentPage} of {totalPages} · 10 applications per page</p>
+                <div className="flex gap-2">
+                  <button type="button" className="btn btn-muted !min-h-9" disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</button>
+                  <button type="button" className="btn btn-muted !min-h-9" disabled={currentPage === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next</button>
+                </div>
+              </div>}
             </Panel>
           </>}
 
@@ -344,6 +372,62 @@ export default function Admin() {
               <button type="button" className="btn btn-muted mt-5 self-start !py-2" onClick={() => openDialog('department', department, department.name)}><Pencil size={14} /> Rename display label</button>
             </div>)}</div>
             {!departments.length && <Panel><Empty message="No department records were returned." /></Panel>}
+          </>}
+
+          {tab === 'reports' && <>
+            <SectionTitle eyebrow="Reports" title="Clearance analytics exports" description="Download college-wide aggregate statistics. No individual student records are included." />
+            <Panel title="Aggregate analytics reports" description="Only Admin and Principal may download these college-wide reports. Student records are excluded."
+              action={<span className="pill">Admin / Principal</span>}>
+              <div className="grid gap-3 sm:grid-cols-3">{[['pdf', 'PDF report'], ['xlsx', 'Excel workbook'], ['csv', 'CSV data']].map(([format, title]) =>
+                <button key={format} type="button" className="flex min-w-0 items-center gap-3 rounded-md border border-slate-200 bg-white p-4 text-left transition-colors hover:bg-slate-50 disabled:opacity-50" disabled={busy} onClick={() => downloadReport(format)}>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-600"><FileDown size={19} /></span>
+                  <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold text-slate-800">{title}</span><span className="tiny">Download .{format}</span></span>
+                  <Download size={16} className="shrink-0 text-slate-400" />
+                </button>)}
+              </div>
+            </Panel>
+          </>}
+
+          {tab === 'handover' && <>
+            <SectionTitle eyebrow="Certificate collection" title="Certificate handover" description="Select an approved application to verify the original documents and register certificate collection." />
+            <Panel title="Approved applications" action={<select aria-label="Filter by certificate handover" className="field !w-auto" value={handoverFilter} onChange={(e) => setHandoverFilter(e.target.value)}>
+              <option value="pending">Awaiting handover</option>
+              <option value="complete">Handed over</option>
+              <option value="all">All approved</option>
+            </select>}>
+              {handoverApps.length ? <div className="table-wrap"><table><thead><tr><th>Roll number</th><th>Student</th><th>PDF</th><th>Handover</th><th>Action</th></tr></thead>
+                <tbody>{handoverApps.map((item) => <tr key={item.id}>
+                  <td className="font-semibold">{item.rollNumber}</td><td>{item.studentName}</td>
+                  <td><Status value={item.pdfReady ? 'APPROVED' : 'PENDING'} /></td>
+                  <td><Status value={item.handoverStatus || 'NOT_COLLECTED'} /></td>
+                  <td><button type="button" className="btn btn-muted !min-h-9 !py-1.5" onClick={() => inspect(item)}>{item.handoverStatus === 'HANDED_OVER' ? 'View record' : 'Verify handover'} <ArrowRight size={14} /></button></td>
+                </tr>)}</tbody></table></div> : <Empty message="No approved applications match the selected handover filter." />}
+            </Panel>
+          </>}
+
+          {tab === 'audit' && <>
+            <SectionTitle eyebrow="Audit" title="Application audit history" description="Audit records are available per application. Select a student to review the preserved activity timeline." />
+            <Panel title="Find an application">
+              <label className="block max-w-xl"><span className="label">Student name, roll number or application ID</span>
+                <input className="field" value={auditQuery} onChange={(e) => setAuditQuery(e.target.value)} placeholder="Search applications" />
+              </label>
+              <div className="mt-4 max-h-64 overflow-y-auto divide-y divide-slate-100 rounded-md border border-slate-200">
+                {auditApps.slice(0, 30).map((item) => <button key={item.id} type="button" onClick={() => { setAuditSelectedId(item.id); reloadHistory(item.id) }}
+                  className={`flex w-full items-center justify-between gap-3 p-3 text-left text-sm hover:bg-slate-50 ${auditSelectedId === item.id ? 'bg-slate-50' : ''}`}>
+                    <span className="min-w-0"><strong className="block text-slate-800">{item.studentName || 'Student'} · {item.rollNumber}</strong><span className="tiny">Application #{item.id}</span></span>
+                    <ArrowRight size={16} className="shrink-0 text-slate-400" />
+                  </button>)}
+                {!auditApps.length && <Empty message="No applications match your search." />}
+              </div>
+              {auditApps.length > 30 && <p className="tiny mt-2">Showing the first 30 matching records. Refine your search for other applications.</p>}
+            </Panel>
+            {auditSelectedId != null && <Panel title={`Audit events — application #${auditSelectedId}`} action={<button type="button" className="btn btn-muted !py-2" onClick={() => reloadHistory(auditSelectedId)} disabled={historyLoading}><RefreshCw size={15} /> Refresh history</button>}>
+              {historyLoading ? <Loading label="Loading audit events…" /> : history.length ? <div className="divide-y divide-slate-100">{history.map((event) => <div key={event.id} className="py-3">
+                <div className="flex flex-wrap items-start justify-between gap-3"><strong className="text-sm">{String(event.action || 'Event').replaceAll('_', ' ')}</strong><span className="tiny">{dateText(event.createdAt)}</span></div>
+                <p className="tiny mt-1 break-words">{event.actorType || 'System'}{event.details ? ` · ${event.details}` : ''}</p>
+              </div>)}</div> : <Empty message="No audit events recorded for this application." />}
+              <button type="button" className="btn btn-muted mt-4" onClick={() => { const item = apps.find((a) => a.id === auditSelectedId); if (item) inspect(item) }}>Open application details <ArrowRight size={15} /></button>
+            </Panel>}
           </>}
 
           {tab === 'details' && <>
